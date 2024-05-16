@@ -1,0 +1,67 @@
+# After building EC2 instances, Click the `Connect` button.
+1. Open an SSH client.
+2. Locate your private key file. The key used to launch this instance is `kafka-stock-market-project-v1.pem`
+3. Run this command, if necessary, to ensure your key is not publicly viewable.
+	chmod 400 "kafka-stock-market-project-v1.pem"
+4. Connect to your instance using its Public DNS:
+	ec2-18-236-161-9.us-west-2.compute.amazonaws.com
+Example (The commend below is to connect to your EC2 instance):
+	ssh -i "kafka-stock-market-project-v1.pem" ec2-user@ec2-18-236-161-9.us-west-2.compute.amazonaws.com
+
+# Download Kafka (https://kafka.apache.org/downloads)
+wget https://downloads.apache.org/kafka/3.6.2/kafka_2.12-3.6.2.tgz
+# Uncompress zip file
+tar -xvf kafka_2.12-3.6.2.tgz
+
+# Install Java (Apach and Kafka run on top of the JVM (Java Virtual Machine))
+-----------------------
+java -version
+sudo yum install java-1.8.0-openjdk
+java -version
+cd kafka_2.12-3.6.2
+
+# These two steps below should run simultaneously
+i) Start Zoo-keeper:
+-------------------------------
+bin/zookeeper-server-start.sh config/zookeeper.properties
+
+Open another window to start Kafka because we need to keep running Zookeeper on the one-hand side.
+But first ssh to to your ec2 machine as done above
+
+ii) Start Kafka-server:
+----------------------------------------
+# Duplicate the session & enter in a new console --
+# Increase the assigned memory
+export KAFKA_HEAP_OPTS="-Xmx256M -Xms128M"
+cd kafka_2.12-3.6.2
+bin/kafka-server-start.sh config/server.properties
+
+It is pointing to a private server, change server.properties so that it can run in public IP from a different network
+
+To do this, you can follow any of the 2 approaches shared below --
+Do a "sudo nano config/server.properties" - change ADVERTISED_LISTENERS to public ip of the EC2 instance. For example, check the part below. After changing it, press “ctrl + X + Y + Enter”
+```
+# Listener name, hostname and port the broker will advertise to clients.
+# If not set, it uses the value for "listeners".
+#advertised.listeners=PLAINTEXT://your.host.name:9092 → advertised.listeners=PLAINTEXT://18.236.161.9:9092
+```
+
+Create the topic:
+-----------------------------
+Duplicate the session & enter in a new console --
+cd kafka_2.12-3.6.2
+bin/kafka-topics.sh --create --topic demo_test --bootstrap-server {Put the Public IP of your EC2 Instance:9092} --replication-factor 1 --partitions 1
+bin/kafka-topics.sh --create --topic demo_test --bootstrap-server 18.236.161.9:9092 --replication-factor 1 --partitions 1
+bin/kafka-topics.sh --delete --topic demo_test --bootstrap-server 18.236.161.9:9092
+
+Start Producer:
+--------------------------
+bin/kafka-console-producer.sh --topic demo_test --bootstrap-server {Put the Public IP of your EC2 Instance:9092} 
+bin/kafka-console-producer.sh --topic demo_test --bootstrap-server 18.236.161.9:9092
+
+Start Consumer:
+-------------------------
+Duplicate the session & enter in a new console --
+cd kafka_2.12-3.6.2
+bin/kafka-console-consumer.sh --topic demo_test --bootstrap-server {Put the Public IP of your EC2 Instance:9092}
+bin/kafka-console-consumer.sh --topic demo_test --bootstrap-server 18.236.161.9:9092
