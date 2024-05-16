@@ -6,7 +6,7 @@ In this project, you need to execute an End-To-End Data Engineering Project on R
 You use different technologies such as Python, Amazon Web Services (AWS), Apache Kafka, Glue, Athena, and SQL.
 
 ## Architecture 
-<img src="Architecture.jpg">
+<img src="Data_Streaming_Architecture.jpg">
 
 ## Technology Used
 - Programming Language - Python
